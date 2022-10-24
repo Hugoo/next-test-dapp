@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@lukso/lsp-smart-contracts": "^0.7.0",
     "ethers": "^5.7.2",
     "next": "12.3.1",
     "react": "18.2.0",

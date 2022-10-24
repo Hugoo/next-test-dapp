@@ -1,6 +1,7 @@
 import type { NextPage } from "next";
 import { useState } from "react";
 import { ethers, Signer } from "ethers";
+import UniversalProfileContract from "@lukso/lsp-smart-contracts/artifacts/UniversalProfile.json";
 
 const EthersSign: NextPage = () => {
   const [address, setAddress] = useState("");
@@ -23,14 +24,38 @@ const EthersSign: NextPage = () => {
       return;
     }
 
-    const signatureObject = await etherProvider.send("eth_sign", [
+    const signature = await etherProvider.send("eth_sign", [
       address,
       "hello my friend",
     ]);
 
-    console.log("signatureObject", signatureObject);
+    console.log("signature", signature);
 
-    setSignature(signatureObject.signature);
+    setSignature(signature);
+  };
+
+  const verifySignature = async () => {
+    const myUniversalProfileContract = new ethers.Contract(
+      address,
+      UniversalProfileContract.abi,
+      signer
+    );
+
+    const hashedMessage = ethers.utils.hashMessage("hello my friend");
+
+    const isValidSignature = await myUniversalProfileContract.isValidSignature(
+      hashedMessage,
+      signature
+    );
+
+    const MAGIC_VALUE = "0x1626ba7e"; // https://eips.ethereum.org/EIPS/eip-1271
+
+    if (isValidSignature === MAGIC_VALUE) {
+      console.log("🎉 Sign-In successful!");
+    } else {
+      // The EOA which signed the message has no SIGN permission over this UP.
+      console.log("😭 Log In failed");
+    }
   };
 
   return (
@@ -41,6 +66,7 @@ const EthersSign: NextPage = () => {
         <p>Signature: {signature}</p>
         <button onClick={extensionLogin}>Connect</button>
         <button onClick={signMessage}>Sign message</button>
+        <button onClick={verifySignature}>Verify signature</button>
       </div>
     </div>
   );
